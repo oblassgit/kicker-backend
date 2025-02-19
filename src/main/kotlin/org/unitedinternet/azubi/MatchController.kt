@@ -26,7 +26,7 @@ class MatchController(private val matchRepository: MatchRepository, private val 
             return ResponseEntity.badRequest().body(null)
         }
 
-        val match = Match(date = match.date)
+        val matchInDB = Match(date = match.date)
 
         // Convert request scores into entities
         match.scores.forEach { scoreRequest ->
@@ -34,16 +34,17 @@ class MatchController(private val matchRepository: MatchRepository, private val 
                 ?: return ResponseEntity.badRequest().body("The player with id: ${scoreRequest.player.id} could not be found!")
 
             val matchScore = MatchScore(
-                match = match,
+                match = matchInDB,
                 player = player,
                 team = scoreRequest.team,
                 goalsScored = scoreRequest.goalsScored
             )
 
-            match.scores.add(matchScore)
+            matchInDB.scores.add(matchScore)
         }
 
-        return ResponseEntity.ok(matchRepository.save(match))
+        val stored = matchRepository.save(matchInDB);
+        return ResponseEntity.ok(stored)
     }
 
     @PutMapping("/score/{id}")

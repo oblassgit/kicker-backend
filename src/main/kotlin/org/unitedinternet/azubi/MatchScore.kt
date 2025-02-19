@@ -9,7 +9,7 @@ import java.util.*
 data class MatchScore(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    val id: String = "",
+    val id: String? = null,
 
     @ManyToOne
     @JsonIgnore
