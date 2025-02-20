@@ -40,7 +40,6 @@ class PlayerController(val playerRepository: PlayerRepository) {
         existingPlayer.name = updatedPlayer.name
         existingPlayer.wins = updatedPlayer.wins
         existingPlayer.losses = updatedPlayer.losses
-        existingPlayer.draws = updatedPlayer.draws
         existingPlayer.goalsScored = updatedPlayer.goalsScored
         existingPlayer.goalsConceded = updatedPlayer.goalsConceded
 
