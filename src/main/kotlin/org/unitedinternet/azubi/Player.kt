@@ -2,6 +2,7 @@ package org.unitedinternet.azubi
 
 
 import jakarta.persistence.*
+import kotlin.math.roundToInt
 
 
 @Entity
@@ -20,5 +21,15 @@ class Player (
         get() = wins + losses
 
     val points: Int
-        get() = wins * 3
+        get() = calculatePoints(wins, losses, goalsConceded, goalsScored)
 }
+
+private fun calculatePoints(wins: Int, losses: Int, goalsConceded: Int, goalsScored: Int): Int {
+    if (goalsConceded == 0) {
+        return (wins - losses) * goalsScored // Avoid division by zero
+    }
+
+    val points: Double = (wins.toDouble() - losses.toDouble()) * (goalsScored.toDouble() / goalsConceded.toDouble())
+    return if (points >= 0) points.roundToInt() else 0
+}
+

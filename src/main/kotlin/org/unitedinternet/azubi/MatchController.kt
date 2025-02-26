@@ -48,6 +48,30 @@ class MatchController(private val matchRepository: MatchRepository, private val 
         return ResponseEntity.ok(stored)
     }
 
+    @PutMapping("/{id}")
+    fun updateMatch(@PathVariable id: String, @RequestBody updatedMatch: Match): ResponseEntity<Match> {
+        if (updatedMatch.scores.size !in 2..4) {
+            return ResponseEntity.badRequest().body(null)
+        }
+
+        val existingMatchOptional = matchRepository.findById(id)
+        if (!existingMatchOptional.isPresent) {
+            return ResponseEntity.notFound().build()
+        }
+
+        val existingMatch = existingMatchOptional.get()
+        existingMatch.date = updatedMatch.date
+        existingMatch.scores.clear()
+        updatedMatch.scores.forEach { score ->
+            score.match = existingMatch
+            existingMatch.scores.add(score)
+        }
+
+        updatePlayerStats(existingMatch)
+        val stored = matchRepository.save(existingMatch)
+        return ResponseEntity.ok(stored)
+    }
+
     @PutMapping("/score/{id}")
     fun updateMatchScores(@PathVariable id: String, @RequestBody scores: List<MatchScore>): ResponseEntity<Match> {
         val match = matchRepository.findById(id).orElse(null) ?: return ResponseEntity.notFound().build()

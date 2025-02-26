@@ -10,13 +10,18 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/players")
 @Tag(name = "Player API")
-class PlayerController(val playerRepository: PlayerRepository) {
+class PlayerController(val playerRepository: PlayerRepository, val matchRepository: MatchRepository) {
 
     @GetMapping
     fun getAllPlayers(): List<Player> = playerRepository.findAll()
 
     @GetMapping("/{id}")
     fun getPlayerById(@PathVariable id: String): Player? = playerRepository.findById(id).orElse(null)
+
+    @GetMapping("/{id}/matches")
+    fun getMatchesForPlayerById(@PathVariable id: String): List<Match> {
+        return matchRepository.findMatchesByPlayerId(id)
+    }
 
     @PostMapping
     @Transactional
