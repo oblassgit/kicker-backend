@@ -1,6 +1,7 @@
 package org.unitedinternet.azubi
 
 import org.springframework.http.ResponseEntity
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -19,6 +20,7 @@ class MatchController(private val matchRepository: MatchRepository, private val 
         return match.get().scores
     }
 
+    @Transactional
     @PostMapping
     fun createMatch(@RequestBody match: Match): ResponseEntity<Any> {
 
@@ -48,6 +50,7 @@ class MatchController(private val matchRepository: MatchRepository, private val 
         return ResponseEntity.ok(stored)
     }
 
+    @Transactional
     @PutMapping("/{id}")
     fun updateMatch(@PathVariable id: String, @RequestBody updatedMatch: Match): ResponseEntity<Match> {
         if (updatedMatch.scores.size !in 2..4) {
@@ -60,18 +63,26 @@ class MatchController(private val matchRepository: MatchRepository, private val 
         }
 
         val existingMatch = existingMatchOptional.get()
+
+        revertPlayerStats(existingMatch)
+
         existingMatch.date = updatedMatch.date
         existingMatch.scores.clear()
+
         updatedMatch.scores.forEach { score ->
             score.match = existingMatch
             existingMatch.scores.add(score)
         }
 
-        updatePlayerStats(existingMatch)
         val stored = matchRepository.save(existingMatch)
+
+        updatePlayerStats(stored)
+
         return ResponseEntity.ok(stored)
     }
 
+
+    @Transactional
     @PutMapping("/score/{id}")
     fun updateMatchScores(@PathVariable id: String, @RequestBody scores: List<MatchScore>): ResponseEntity<Match> {
         val match = matchRepository.findById(id).orElse(null) ?: return ResponseEntity.notFound().build()
@@ -99,12 +110,17 @@ class MatchController(private val matchRepository: MatchRepository, private val 
         return ResponseEntity.ok(matchRepository.save(match))
     }
 
+    @Transactional
     @DeleteMapping("/{id}")
     fun deleteMatch(@PathVariable id: String): ResponseEntity<Void> {
         return if (matchRepository.existsById(id)) {
-            revertPlayerStats(matchRepository.findById(id).get())
-            matchRepository.deleteById(id)
-            ResponseEntity.noContent().build()
+            try {
+                revertPlayerStats(matchRepository.findById(id).get())
+                matchRepository.deleteById(id)
+                ResponseEntity.noContent().build()
+            } catch (e: Exception) {
+                ResponseEntity.internalServerError().build()
+            }
         } else {
             ResponseEntity.notFound().build()
         }
@@ -140,7 +156,8 @@ class MatchController(private val matchRepository: MatchRepository, private val 
 
     private fun revertPlayerStats(match: Match?) {
         match?.scores?.forEach { score ->
-            val player = score.player
+            val player = playerRepository.findById(score.player.id!!).orElse(null) ?: return
+
             player.goalsScored -= score.goalsScored
             player.goalsConceded -= match.calculateGoalsConceded(player)
 
@@ -153,6 +170,7 @@ class MatchController(private val matchRepository: MatchRepository, private val 
             playerRepository.save(player)
         }
     }
+
 }
 
 
