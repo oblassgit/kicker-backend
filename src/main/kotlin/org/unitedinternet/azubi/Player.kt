@@ -2,8 +2,6 @@ package org.unitedinternet.azubi
 
 
 import jakarta.persistence.*
-import kotlin.math.roundToInt
-
 
 @Entity
 class Player (
@@ -25,11 +23,14 @@ class Player (
 }
 
 private fun calculatePoints(wins: Int, losses: Int, goalsConceded: Int, goalsScored: Int): Int {
-    if (goalsConceded == 0) {
-        return (wins - losses) * goalsScored // Avoid division by zero
-    }
+    val basePoints = wins - losses // Standard points for wins
+    val goalDifferenceBonus = (goalsScored - goalsConceded).coerceAtLeast(0) / 5  // Bonus for goal difference every 5 goals
+    val totalPoints = basePoints + goalDifferenceBonus
 
-    val points: Double = (wins.toDouble() - losses.toDouble()) * (goalsScored.toDouble() / goalsConceded.toDouble())
-    return if (points >= 0) points.roundToInt() else 0
+    return if (totalPoints >= 0) {
+        totalPoints
+    } else {
+        0
+    }
 }
 

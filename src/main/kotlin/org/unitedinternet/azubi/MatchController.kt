@@ -156,7 +156,7 @@ class MatchController(private val matchRepository: MatchRepository, private val 
 
     private fun revertPlayerStats(match: Match?) {
         match?.scores?.forEach { score ->
-            val player = playerRepository.findById(score.player.id!!).orElse(null) ?: return
+            val player = playerRepository.findById(score.player.id!!).orElse(null) ?: return@forEach
 
             player.goalsScored -= score.goalsScored
             player.goalsConceded -= match.calculateGoalsConceded(player)

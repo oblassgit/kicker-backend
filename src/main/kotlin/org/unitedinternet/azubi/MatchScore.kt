@@ -2,8 +2,6 @@ package org.unitedinternet.azubi
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
-import org.hibernate.annotations.OnDelete
-import org.hibernate.annotations.OnDeleteAction
 import java.util.*
 
 @Entity
@@ -20,7 +18,6 @@ data class MatchScore(
 
     @ManyToOne
     @JoinColumn(name = "player_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     val player: Player,
 
     @Enumerated(EnumType.STRING)
